@@ -1,30 +1,39 @@
 extern crate log;
 extern crate time;
+extern crate regex;
 use self::log::*;
-use std::fs::File;
+use self::regex::Regex;
 use std::io::Write;
 use std::sync::Mutex;
 use std::marker::Send;
+use std::boxed::Box;
 
 pub struct Logger<W> {
-    level: Option<LogLevel>,
-    file: Mutex<W>
+    level: LogLevelFilter,
+    file: Mutex<W>,
+    filter: Option<Regex>
 }
 
+
 impl <W:Write+Send>Logger<W> {
-    fn new(level: Option<LogLevel>, file: W) -> Self {
+    fn new(level: LogLevelFilter, filter: Option<Regex>, file: W) -> Self {
         Logger {
             level: level,
-            file: Mutex::new(file)
+            file: Mutex::new(file),
+            filter: filter
         }
     }
 }
 
 impl <W:Write+Send>Log for Logger<W> {
     fn enabled(&self, metadata: &LogMetadata) -> bool {
-        match self.level {
-            Some(l) => metadata.level() <= l,
-            None => true
+        if metadata.level() <= self.level {
+            match self.filter {
+                Some(ref f) => f.is_match(metadata.target()),
+                None => true
+            }   
+        } else {
+            true
         }
     }
 
@@ -44,9 +53,42 @@ impl <W:Write+Send>Log for Logger<W> {
     }
 }
 
-pub fn init<W:'static + Write+Send>(level: Option<LogLevel>, file: W) -> Result<(), SetLoggerError> {
-    log::set_logger(move |max_log_level| {
-        max_log_level.set(LogLevelFilter::Trace);
-        Box::new(Logger::new(level, file))
-    })
+
+pub struct LoggerBuilder<W> {
+    level: LogLevelFilter,
+    file: W,
+    filter: Option<Regex>
+}
+
+
+impl <W: 'static+Write+Send>LoggerBuilder<W> {
+    pub fn new(w: W) -> Self {
+        LoggerBuilder {
+            level: LogLevelFilter::Off,
+            file: w,
+            filter: None
+        }
+    }
+
+    pub fn filter(mut self, r: Regex) -> Self {
+        self.filter = Some(r);
+        self
+    }
+
+    pub fn level(mut self, l: LogLevelFilter) -> Self {
+        self.level = l;
+        self
+    }
+
+    pub fn build(self) -> Logger<W> {
+        let LoggerBuilder{level, filter, file} = self;
+        Logger::new(level, filter, file)
+    }
+
+    pub fn init(self) -> Result<(), SetLoggerError> {        
+        log::set_logger(move |max_log_level| {
+            max_log_level.set(self.level);
+            Box::new(self.build())
+        })
+    }
 }

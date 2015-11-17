@@ -4,5 +4,6 @@ version = "0.1.0"
 authors = ["Sunrin SHIMURA (keen) <3han5chou7@gmail.com>"]
 
 [dependencies]
-log = "0.3"
 time = "*"
+regex = "0.1.41"
+log = "0.3"

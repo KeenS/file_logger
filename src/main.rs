@@ -8,7 +8,7 @@ use self::file_logger::LoggerBuilder;
 fn main() {
     let regex = Regex::new("test").unwrap();
     LoggerBuilder::new_file("./test.log").unwrap()
-        .filter(regex)
+        .tag(regex)
         .level(log::LogLevelFilter::Warn)
         .init().unwrap();
     info!("test");

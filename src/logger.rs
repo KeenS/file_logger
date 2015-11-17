@@ -15,16 +15,16 @@ use std::io;
 pub struct Logger<W> {
     level: LogLevelFilter,
     file: Mutex<W>,
-    filter: Option<Regex>
+    tag: Option<Regex>
 }
 
 
 impl <W:Write+Send>Logger<W> {
-    fn new(level: LogLevelFilter, filter: Option<Regex>, file: W) -> Self {
+    fn new(level: LogLevelFilter, tag: Option<Regex>, file: W) -> Self {
         Logger {
             level: level,
             file: Mutex::new(file),
-            filter: filter
+            tag: tag
         }
     }
 }
@@ -32,7 +32,7 @@ impl <W:Write+Send>Logger<W> {
 impl <W:Write+Send>Log for Logger<W> {
     fn enabled(&self, metadata: &LogMetadata) -> bool {
         if metadata.level() <= self.level {
-            match self.filter {
+            match self.tag {
                 Some(ref f) => f.is_match(metadata.target()),
                 None => true
             }   
@@ -61,7 +61,7 @@ impl <W:Write+Send>Log for Logger<W> {
 pub struct LoggerBuilder<W> {
     level: LogLevelFilter,
     file: W,
-    filter: Option<Regex>
+    tag: Option<Regex>
 }
 
 
@@ -70,12 +70,12 @@ impl <W: 'static+Write+Send>LoggerBuilder<W> {
         LoggerBuilder {
             level: LogLevelFilter::Off,
             file: w,
-            filter: None
+            tag: None
         }
     }
 
-    pub fn filter(mut self, r: Regex) -> Self {
-        self.filter = Some(r);
+    pub fn tag(mut self, r: Regex) -> Self {
+        self.tag = Some(r);
         self
     }
 
@@ -85,8 +85,8 @@ impl <W: 'static+Write+Send>LoggerBuilder<W> {
     }
 
     pub fn build(self) -> Logger<W> {
-        let LoggerBuilder{level, filter, file} = self;
-        Logger::new(level, filter, file)
+        let LoggerBuilder{level, tag, file} = self;
+        Logger::new(level, tag, file)
     }
 
     pub fn init(self) -> Result<(), SetLoggerError> {        

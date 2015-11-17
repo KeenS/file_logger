@@ -7,6 +7,10 @@ use std::io::Write;
 use std::sync::Mutex;
 use std::marker::Send;
 use std::boxed::Box;
+use std::fs::File;
+use std::fs::OpenOptions;
+use std::path::Path;
+use std::io;
 
 pub struct Logger<W> {
     level: LogLevelFilter,
@@ -62,7 +66,7 @@ pub struct LoggerBuilder<W> {
 
 
 impl <W: 'static+Write+Send>LoggerBuilder<W> {
-    pub fn new(w: W) -> Self {
+    pub fn file(w: W) -> Self {
         LoggerBuilder {
             level: LogLevelFilter::Off,
             file: w,
@@ -91,4 +95,17 @@ impl <W: 'static+Write+Send>LoggerBuilder<W> {
             Box::new(self.build())
         })
     }
+}
+
+impl LoggerBuilder<File> {
+    pub fn new_file<P: AsRef<Path>>(p: P) -> io::Result<Self> {
+        let file = try!(File::create(p));
+        Ok(Self::file(file))
+    }
+
+    pub fn append_file<P: AsRef<Path>>(p: P) -> io::Result<Self> {
+        let file = OpenOptions::new().write(true).create(true).append(true).open(p.as_ref());
+        let file = try!(file);
+        Ok(Self::file(file))
+    }    
 }

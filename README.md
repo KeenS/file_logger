@@ -5,10 +5,10 @@ A logger backend of files.
 
 Provides
 
-* configuration via file (maybe toml will be used)
-* configuration as code
-* flexible log format
-* log filtering
+* [ ] configuration via file (maybe toml will be used)
+* [x] configuration as code
+* [ ] flexible log format
+* [x] log filtering
 
 DOES NOT provide
 

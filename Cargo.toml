@@ -3,7 +3,11 @@ name = "file_logger"
 version = "0.1.0"
 authors = ["Sunrin SHIMURA (keen) <3han5chou7@gmail.com>"]
 
+[[bin]]
+doc = false
+name = "test"
+
 [dependencies]
 time = "*"
-regex = "0.1.41"
+regex = "0.1"
 log = "0.3"

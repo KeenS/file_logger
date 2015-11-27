@@ -7,7 +7,7 @@ Provides
 
 * [ ] configuration via file (maybe toml will be used)
 * [x] configuration as code
-* [ ] flexible log format
+* [x] flexible log format
 * [x] log filtering
 
 DOES NOT provide

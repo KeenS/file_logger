@@ -14,6 +14,7 @@ use std::io;
 
 use format::Formatter;
 
+
 pub enum OnError {
     Panic,
     Ignore,
@@ -60,9 +61,9 @@ impl <W:Write+Send>Log for Logger<W> {
         let now = time::now();
         match self.formatter.format(&mut *file, record, &now) {
             Ok(_) => (),
-            Err(_) => match self.on_error {
+            Err(ref e) => match self.on_error {
                 OnError::Ignore => (),
-                OnError::Panic => panic!("Could not write log")
+                OnError::Panic => panic!("{}", e)
             }
         }
     }

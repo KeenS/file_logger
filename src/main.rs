@@ -3,11 +3,11 @@ extern crate file_logger;
 extern crate log;
 extern crate regex;
 use self::regex::Regex;
-use self::file_logger::LoggerBuilder;
+use self::file_logger::{LoggerBuilder, OnError};
 
 fn main() {
     let regex = Regex::new("test").unwrap();
-    LoggerBuilder::new_file("./test.log").unwrap()
+    LoggerBuilder::new_file("/dev/full").unwrap()
         .tag(regex)
         .level(log::LogLevelFilter::Warn)
         .init().unwrap();

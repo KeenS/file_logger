@@ -11,20 +11,25 @@ use std::fs::File;
 use std::fs::OpenOptions;
 use std::path::Path;
 use std::io;
+use std::ops::DerefMut;
+
+use format::Formatter;
 
 pub struct Logger<W> {
     level: LogLevelFilter,
     file: Mutex<W>,
-    tag: Option<Regex>
+    tag: Option<Regex>,
+    formatter: Formatter
 }
 
 
 impl <W:Write+Send>Logger<W> {
-    fn new(level: LogLevelFilter, tag: Option<Regex>, file: W) -> Self {
+    fn new(level: LogLevelFilter, tag: Option<Regex>, file: W, formatter: Formatter) -> Self {
         Logger {
             level: level,
             file: Mutex::new(file),
-            tag: tag
+            tag: tag,
+            formatter: formatter,
         }
     }
 }
@@ -45,15 +50,7 @@ impl <W:Write+Send>Log for Logger<W> {
         if !Log::enabled(self, record.metadata()) {
             return;
         }
-        let now  = time::strftime("%F %T%z", &time::now()).unwrap();
-        let location = record.location();
-        let _ = writeln!(self.file.lock().unwrap(), "[{level}] {timestamp} {module_path}:{file}:{line} - {message}",
-                         level = record.level(),
-                         timestamp = now,
-                         module_path = location.module_path(),
-                         file = location.file(),
-                         line = location.line(),
-                         message = record.args());
+        self.formatter.format(self.file.lock().unwrap().deref_mut(), record).unwrap();
     }
 }
 
@@ -61,7 +58,8 @@ impl <W:Write+Send>Log for Logger<W> {
 pub struct LoggerBuilder<W> {
     level: LogLevelFilter,
     file: W,
-    tag: Option<Regex>
+    tag: Option<Regex>,
+    formatter: Formatter,
 }
 
 
@@ -70,7 +68,8 @@ impl <W: 'static+Write+Send>LoggerBuilder<W> {
         LoggerBuilder {
             level: LogLevelFilter::Off,
             file: w,
-            tag: None
+            tag: None,
+            formatter: Formatter::default()
         }
     }
 
@@ -85,8 +84,8 @@ impl <W: 'static+Write+Send>LoggerBuilder<W> {
     }
 
     pub fn build(self) -> Logger<W> {
-        let LoggerBuilder{level, tag, file} = self;
-        Logger::new(level, tag, file)
+        let LoggerBuilder{level, tag, file, formatter} = self;
+        Logger::new(level, tag, file, formatter)
     }
 
     pub fn init(self) -> Result<(), SetLoggerError> {        

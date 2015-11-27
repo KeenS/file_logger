@@ -11,7 +11,6 @@ use std::fs::File;
 use std::fs::OpenOptions;
 use std::path::Path;
 use std::io;
-use std::ops::DerefMut;
 
 use format::Formatter;
 
@@ -50,7 +49,9 @@ impl <W:Write+Send>Log for Logger<W> {
         if !Log::enabled(self, record.metadata()) {
             return;
         }
-        self.formatter.format(self.file.lock().unwrap().deref_mut(), record).unwrap();
+        let mut file = self.file.lock().unwrap();
+        let now = time::now();
+        self.formatter.format(&mut *file, record, &now).unwrap();
     }
 }
 

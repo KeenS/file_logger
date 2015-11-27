@@ -1,5 +1,6 @@
 extern crate log;
 extern crate time;
+use self::time::Tm;
 use self::log::LogRecord;
 use std::vec::Vec;
 use std::io::Write;
@@ -17,12 +18,13 @@ pub enum FormatterEnum {
 }
 
 impl FormatterEnum {
-    pub fn format<W: Write>(&self, f:&mut  W, record: &LogRecord) -> Result<(), Error>{
+    pub fn format<W: Write>(&self, f:&mut  W, record: &LogRecord, datetime: &Tm) -> Result<(), Error>{
         let location = record.location();
         match self {
             &FormatterEnum::Str(ref s) => write!(f, "{}", s),
             &FormatterEnum::Level => write!(f, "{}", record.level()),
-            &FormatterEnum::Timestamp(ref s) => write!(f, "{}", time::strftime(s, &time::now()).unwrap()),
+            // TODO: don't use `unwrap()`
+            &FormatterEnum::Timestamp(ref s) => write!(f, "{}", time::strftime(s, datetime).unwrap()),
             &FormatterEnum::ModulePath => write!(f, "{}", location.module_path()),
             &FormatterEnum::File => write!(f, "{}", location.file()),
             &FormatterEnum::Line => write!(f, "{}", location.line()),
@@ -60,10 +62,10 @@ impl Formatter {
         self.f.push(f);
     }
 
-    pub fn format<W:Write>(&self, mut w:  &mut W, record: &LogRecord) -> Result<(), Error>{
+    pub fn format<W:Write>(&self, mut w:  &mut W, record: &LogRecord, datetime: &Tm) -> Result<(), Error>{
         let v: &[FormatterEnum] = &self.f;
         for f in v {
-            try!(f.format(w, record));
+            try!(f.format(w, record, datetime));
         };
         write!(w, "\n")
     }

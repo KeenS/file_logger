@@ -14,21 +14,28 @@ use std::io;
 
 use format::Formatter;
 
+pub enum OnError {
+    Panic,
+    Ignore,
+}
+
 pub struct Logger<W> {
     level: LogLevelFilter,
     file: Mutex<W>,
     tag: Option<Regex>,
-    formatter: Formatter
+    formatter: Formatter,
+    on_error: OnError,
 }
 
 
 impl <W:Write+Send>Logger<W> {
-    fn new(level: LogLevelFilter, tag: Option<Regex>, file: W, formatter: Formatter) -> Self {
+    fn new(level: LogLevelFilter, tag: Option<Regex>, file: W, formatter: Formatter, on_error: OnError) -> Self {
         Logger {
             level: level,
             file: Mutex::new(file),
             tag: tag,
             formatter: formatter,
+            on_error: on_error,
         }
     }
 }
@@ -51,7 +58,13 @@ impl <W:Write+Send>Log for Logger<W> {
         }
         let mut file = self.file.lock().unwrap();
         let now = time::now();
-        self.formatter.format(&mut *file, record, &now).unwrap();
+        match self.formatter.format(&mut *file, record, &now) {
+            Ok(_) => (),
+            Err(_) => match self.on_error {
+                OnError::Ignore => (),
+                OnError::Panic => panic!("Could not write log")
+            }
+        }
     }
 }
 
@@ -61,6 +74,7 @@ pub struct LoggerBuilder<W> {
     file: W,
     tag: Option<Regex>,
     formatter: Formatter,
+    on_error: OnError,
 }
 
 
@@ -70,7 +84,8 @@ impl <W: 'static+Write+Send>LoggerBuilder<W> {
             level: LogLevelFilter::Off,
             file: w,
             tag: None,
-            formatter: Formatter::default()
+            formatter: Formatter::default(),
+            on_error: OnError::Panic,
         }
     }
 
@@ -84,9 +99,19 @@ impl <W: 'static+Write+Send>LoggerBuilder<W> {
         self
     }
 
+    pub fn formatter(mut self, f: Formatter) -> Self {
+        self.formatter = f;
+        self
+    }
+
+    pub fn on_error(mut self, e: OnError) -> Self {
+        self.on_error = e;
+        self
+    }
+
     pub fn build(self) -> Logger<W> {
-        let LoggerBuilder{level, tag, file, formatter} = self;
-        Logger::new(level, tag, file, formatter)
+        let LoggerBuilder{level, tag, file, formatter, on_error} = self;
+        Logger::new(level, tag, file, formatter, on_error)
     }
 
     pub fn init(self) -> Result<(), SetLoggerError> {        

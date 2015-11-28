@@ -30,7 +30,8 @@ impl error::Error for FormatError {
 pub enum Error {
     Io(io::Error),
     Parse(time::ParseError),
-    Format(FormatError)
+    Format(FormatError),
+    Config
 }
 
 impl fmt::Display for Error {
@@ -39,6 +40,7 @@ impl fmt::Display for Error {
             Error::Io(ref e) => write!(f, "IO error: {}", e),
             Error::Parse(ref e) => write!(f, "Parse error: {}", e),
             Error::Format(ref e) => write!(f, "Format error: {}", e),
+            Error::Config => write!(f, "Config error"),
         }
     }
 }
@@ -49,6 +51,7 @@ impl error::Error for Error {
             Error::Io(ref e) => e.description(),
             Error::Parse(ref e) => e.description(),
             Error::Format(ref e) => e.description(),
+            Error::Config => "config error",
         }
     }
 
@@ -56,7 +59,8 @@ impl error::Error for Error {
         match *self {
             Error::Io(ref e) => Some(e),
             Error::Parse(ref e) => Some(e),
-            Error::Format(ref e) => Some(e)
+            Error::Format(ref e) => Some(e),
+            Error::Config => None
         }
     }
 

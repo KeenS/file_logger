@@ -90,10 +90,10 @@ named!(_tag <FormatSpecifier>,
        delimited!(char!('{'),
                   alt!(
                       tag!("level")         => {|_| FormatSpecifier::Level}
+                      | tag!("message")     => {|_| FormatSpecifier::Message}
                       | tag!("file")        => {|_| FormatSpecifier::File}
                       | tag!("module_path") => {|_| FormatSpecifier::ModulePath}
                       | tag!("line")        => {|_| FormatSpecifier::Line}
-                      | tag!("message")     => {|_| FormatSpecifier::Message}
                       | tag!("timestamp")   => {|_| FormatSpecifier::Timestamp("%F %T%z".to_string())}),
                   char!('}')));
 

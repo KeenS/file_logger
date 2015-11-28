@@ -1,10 +1,15 @@
 extern crate log;
 extern crate time;
+extern crate nom;
 use self::time::Tm;
 use self::log::LogRecord;
+use self::nom::IResult;
 use std::vec::Vec;
 use std::io;
+use std::str::FromStr;
+use std::str::from_utf8;
 use error::*;
+
 
 #[derive(Debug)]
 pub enum FormatSpecifier {
@@ -69,5 +74,44 @@ impl Formatter {
         };
         try!(write!(w, "\n"));
         Ok(())
+    }
+}
+
+
+named!(parse_str < Vec<FormatSpecifier> >, many0!(alt!(_str|_tag)));
+named!(_str <FormatSpecifier>, map_res!(many1!(is_not!("{")), |vs| {
+    let mut vec = Vec::new();
+    for v in vs {
+        vec.extend(v);
+    }
+    from_utf8(&vec).map(|s| FormatSpecifier::Str(s.to_string()))   
+}));
+named!(_tag <FormatSpecifier>,
+       delimited!(char!('{'),
+                  alt!(
+                      tag!("level")         => {|_| FormatSpecifier::Level}
+                      | tag!("file")        => {|_| FormatSpecifier::File}
+                      | tag!("module_path") => {|_| FormatSpecifier::ModulePath}
+                      | tag!("line")        => {|_| FormatSpecifier::Line}
+                      | tag!("message")     => {|_| FormatSpecifier::Message}
+                      | tag!("timestamp")   => {|_| FormatSpecifier::Timestamp("%F %T%z".to_string())}),
+                  char!('}')));
+
+impl FromStr for Formatter {
+    type Err = FormatError;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match parse_str(s.as_bytes()) {
+            IResult::Done(rest, v) => {
+                let len = rest.len();
+                if len == 0 {
+                    Ok(Formatter{f: v})
+                } else {
+                    println!("{}", from_utf8(rest).unwrap());
+                    Err(FormatError{format: s.to_string(), position: s.len() - len})
+                }
+            },
+            IResult::Incomplete(_) => Err(FormatError{format: s.to_string(), position: 0}),
+            IResult::Error(_) => Err(FormatError{format: s.to_string(), position: 1}),
+        }
     }
 }

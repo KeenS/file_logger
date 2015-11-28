@@ -7,9 +7,10 @@ use self::file_logger::{LoggerBuilder, OnError};
 
 fn main() {
     let regex = Regex::new("test").unwrap();
-    LoggerBuilder::new_file("/dev/full").unwrap()
+    LoggerBuilder::new_file("test/test.log").unwrap()
         .tag(regex)
         .level(log::LogLevelFilter::Warn)
+        .formatter("[{level}] {timestamp} {module_path}:{file}:{line} - {message}".parse().unwrap())
         .init().unwrap();
     info!("test");
     info!("test");

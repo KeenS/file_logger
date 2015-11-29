@@ -89,12 +89,12 @@ named!(_str <FormatSpecifier>, map_res!(many1!(is_not!("{")), |vs| {
 named!(_tag <FormatSpecifier>,
        delimited!(char!('{'),
                   alt!(
-                      tag!("level")         => {|_| FormatSpecifier::Level}
-                      | tag!("message")     => {|_| FormatSpecifier::Message}
-                      | tag!("file")        => {|_| FormatSpecifier::File}
-                      | tag!("module_path") => {|_| FormatSpecifier::ModulePath}
-                      | tag!("line")        => {|_| FormatSpecifier::Line}
-                      | tag!("timestamp")   => {|_| FormatSpecifier::Timestamp("%F %T%z".to_string())}),
+                      complete!(tag!("level"))       => {|_| FormatSpecifier::Level} |
+                      complete!(tag!("message"))     => {|_| FormatSpecifier::Message} |
+                      complete!(tag!("file"))        => {|_| FormatSpecifier::File} |
+                      complete!(tag!("module_path")) => {|_| FormatSpecifier::ModulePath} |
+                      complete!(tag!("line"))        => {|_| FormatSpecifier::Line} |
+                      complete!(tag!("timestamp"))   => {|_| FormatSpecifier::Timestamp("%F %T%z".to_string())}),
                   char!('}')));
 
 impl FromStr for Formatter {

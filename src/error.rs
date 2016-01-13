@@ -31,7 +31,7 @@ pub enum Error {
     Io(io::Error),
     Parse(time::ParseError),
     Format(FormatError),
-    Config
+    Config,
 }
 
 impl fmt::Display for Error {
@@ -60,10 +60,9 @@ impl error::Error for Error {
             Error::Io(ref e) => Some(e),
             Error::Parse(ref e) => Some(e),
             Error::Format(ref e) => Some(e),
-            Error::Config => None
+            Error::Config => None,
         }
     }
-
 }
 
 impl From<io::Error> for Error {

@@ -6,7 +6,7 @@ repository = "https://github.com/KeenS/file_logger"
 keywords = ["log", "file"]
 license-file = "LICENSE"
 readme = "README.md"
-description = "A simple logger backend that outputs to a file "
+description = "A simple logger backend that outputs to a file. \nThis is alpha state."
 
 [dependencies]
 toml = "0.1.23"

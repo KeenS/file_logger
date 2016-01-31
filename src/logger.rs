@@ -47,7 +47,7 @@ impl <W:Write+Send>Logger<W> {
     }
 }
 
-impl <W:Write+Send>Log for Logger<W> {
+impl<W: Write + Send> Log for Logger<W> {
     fn enabled(&self, metadata: &LogMetadata) -> bool {
         if metadata.level() <= self.level {
             match self.tag {
@@ -85,7 +85,7 @@ pub struct LoggerBuilder<W> {
 }
 
 
-impl <W: 'static+Write+Send>LoggerBuilder<W> {
+impl<W: 'static + Write + Send> LoggerBuilder<W> {
     pub fn file(w: W) -> Self {
         LoggerBuilder {
             level: LogLevelFilter::Off,
@@ -127,7 +127,6 @@ impl <W: 'static+Write+Send>LoggerBuilder<W> {
             Box::new(self.build())
         })
     }
-
 }
 
 impl LoggerBuilder<File> {

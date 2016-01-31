@@ -63,7 +63,6 @@ impl error::Error for Error {
             Error::Config => None,
         }
     }
-
 }
 
 impl From<io::Error> for Error {

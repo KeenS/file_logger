@@ -17,7 +17,10 @@ file = "test/test.log"
 tag = "test"
 level = "Warn"
 format = "[{level}] {timestamp} {module_path}:{file}:{line} - {message}"
-"#).unwrap().init().unwrap();
+"#)
+        .unwrap()
+        .init()
+        .unwrap();
     info!("test");
     info!("test");
     for i in 0..100 {

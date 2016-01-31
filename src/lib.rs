@@ -1,8 +1,8 @@
 #[macro_use]
 extern crate nom;
 
-pub mod logger;
-pub mod format;
-pub mod error;
+mod logger;
+mod format;
+mod error;
 
 pub use logger::*;

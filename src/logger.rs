@@ -31,7 +31,12 @@ pub struct Logger<W> {
 
 
 impl <W:Write+Send>Logger<W> {
-    fn new(level: LogLevelFilter, tag: Option<Regex>, file: W, format: Formatter, on_error: OnError) -> Self {
+    fn new(level: LogLevelFilter,
+           tag: Option<Regex>,
+           file: W,
+           format: Formatter,
+           on_error: OnError)
+           -> Self {
         Logger {
             level: level,
             file: Mutex::new(file),
@@ -47,8 +52,8 @@ impl <W:Write+Send>Log for Logger<W> {
         if metadata.level() <= self.level {
             match self.tag {
                 Some(ref f) => f.is_match(metadata.target()),
-                None => true
-            }   
+                None => true,
+            }
         } else {
             true
         }
@@ -64,8 +69,8 @@ impl <W:Write+Send>Log for Logger<W> {
             Ok(_) => (),
             Err(ref e) => match self.on_error {
                 OnError::Ignore => (),
-                OnError::Panic => panic!("{}", e)
-            }
+                OnError::Panic => panic!("{}", e),
+            },
         }
     }
 }
@@ -116,7 +121,7 @@ impl <W: 'static+Write+Send>LoggerBuilder<W> {
         Logger::new(level, tag, file, format, on_error)
     }
 
-    pub fn init(self) -> Result<(), SetLoggerError> {        
+    pub fn init(self) -> Result<(), SetLoggerError> {
         log::set_logger(move |max_log_level| {
             max_log_level.set(self.level);
             Box::new(self.build())
@@ -135,27 +140,27 @@ impl LoggerBuilder<File> {
         let file = OpenOptions::new().write(true).create(true).append(true).open(p.as_ref());
         let file = try!(file);
         Ok(Self::file(file))
-    }    
+    }
     pub fn from_config_str(s: &str) -> Result<Self, Error> {
         let v = toml::Parser::new(s).parse().unwrap();
         Self::from_config_toml(v)
     }
 
     pub fn from_config_toml(v: toml::Table) -> Result<Self, Error> {
-        let f = match v.get("file").and_then(|s| s.as_str())  {
+        let f = match v.get("file").and_then(|s| s.as_str()) {
             Some(s) => match v.get("append").and_then(|b| b.as_bool()) {
                 Some(true) => try!(Self::append_file(s)),
                 Some(false) |
-                None => try!(Self::new_file(s))
+                None => try!(Self::new_file(s)),
             },
-            None => return Err(Error::Config)
+            None => return Err(Error::Config),
         };
         let f = match v.get("tag").and_then(|s| s.as_str()) {
             Some(s) => {
                 let r = try!(Regex::new(s).map_err(|_| Error::Config));
                 f.tag(r)
-            },
-            None => f
+            }
+            None => f,
         };
         let f = match v.get("level").and_then(|s| s.as_str()) {
             Some(s) => {
@@ -169,12 +174,12 @@ impl LoggerBuilder<File> {
                     _ => return Err(Error::Config),
                 };
                 f.level(l)
-            },
-            None => f
+            }
+            None => f,
         };
         let f = match v.get("format").and_then(|s| s.as_str()) {
             Some(s) => f.format(try!(s.parse())),
-            None => f
+            None => f,
         };
         Ok(f)
     }

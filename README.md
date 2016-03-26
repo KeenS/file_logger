@@ -1,12 +1,10 @@
-WARN: This project is under development. Not ready to use and not registered to creats.io
-
 # file_logger
 A logger backend of files.
 
 Provides
 
-* [ ] configuration via file (maybe toml will be used)
-* [x] configuration as code
+* [x] configuration via file (TOML)
+* [x] configuration via code
 * [x] flexible log format
 * [x] log filtering
 
